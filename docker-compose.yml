@@ -36,4 +36,57 @@ services:
       timeout: 5s
       retries: 5
 
-##################### צריך לסדר מכאן לפי מה שאני משתמש
+
+
+
+
+  hostage-producer:
+    build: ./hostage/hostage-producer
+    container_name: hostage-producer
+    depends_on:
+      kafka:
+        condition: service_healthy
+#      postgresQl:
+#        condition: service_healthy
+
+
+
+  explos-processor:
+    build: ./explos/explos-producer
+    container_name: explos-processor
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+# יש לי, זה שיך לכל שאר emails
+  stream-producer:
+    build: ./stream-processor
+    container_name: stream-processor
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+
+  hostage-consumer:
+    build: ./hostage/hostage-consumer
+    container_name: hostage-consumer
+    depends_on:
+      kafka:
+        condition: service_healthy
+#      postgresQl:
+#          condition: service_healthy
+
+  explos-consumer:
+    build: ./explos/explos-consumer
+    container_name: explos-consumer
+    depends_on:
+      kafka:
+        condition: service_healthy
+#      postgresQl:
+#        condition: service_healthy
+
+
+  app-service:
+    build: ./flask-file
+    container_name: flask

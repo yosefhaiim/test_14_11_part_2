@@ -1,14 +1,19 @@
+from typing import final
+
 from kafka import KafkaConsumer, KafkaProducer
 import json
 
 
 consumer = KafkaConsumer(
-    'Immiles',
+    'messages.all',
     bootstrap_servers=['kafka:9092'],
     auto_offset_reset='earliest',
     group_id='suspicious_emails_group',
     value_deserializer=lambda m: json.loads(m.decode('utf-8'))
 )
+
+
+
 
 producer = KafkaProducer(
     bootstrap_servers=['kafka:9092'],
@@ -16,15 +21,17 @@ producer = KafkaProducer(
 )
 
 
+
 blacklisted_words = ['hostage', 'explos']
 
 for message in consumer:
     email = message.value
+    producer.send('messages.all', value=email) # ההוראה לשלוח את האימלים כולם לproducer בשם message.all
     if email['sentences'.lower()] in blacklisted_words[0]:
-        producer.send('hostage_producer', value=email)
+        producer.send('message.hostage', value=email)
         print(f"{email} this email contain the word: {blacklisted_words[0]}")
     elif email['sentences'] in blacklisted_words[1]  :
-        producer.send('explos_producer', value=email)
+        producer.send('message.explos', value=email)
         print(f"{email} this email contain the word: {blacklisted_words[1]}")
     else:
         # Write normal transactions to a CSV file
@@ -33,3 +40,4 @@ for message in consumer:
                     f"{email['created_at']}, {email['location']},{email['device_info']}"
                     f",{email['sentences']}\n")
         print(f"Normal email logged: {email}")
+
